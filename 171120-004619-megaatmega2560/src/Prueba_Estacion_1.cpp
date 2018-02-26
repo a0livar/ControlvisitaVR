@@ -1,5 +1,8 @@
+
+
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <CircularBuffer.h> //Buffer Circular
 
 /******
 
@@ -37,6 +40,8 @@ int tipo = 0, valor = 0, tiemp = 0, aux_val = 0;
 char byteIN[4]="\0";
 byte NEXTbyte = 0x00;
 boolean run = false;
+
+CircularBuffer<char, 10> buffer;
 
 void setup() {
  Serial.begin(9600);
