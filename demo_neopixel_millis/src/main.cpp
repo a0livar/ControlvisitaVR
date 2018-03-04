@@ -2,7 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 
 #define PIN_SEC_1 2
-#define NUMPIXELS 12
+#define NUMPIXELS 344
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN_SEC_1, NEO_GRB + NEO_KHZ800);
 
@@ -27,7 +27,7 @@ void loop() {
   if (currentMillis - previousMillis > delay_millis) {
     pixels.setPixelColor(i, Wheel((i+j) & 255));
     pixels.show();
-    if (i == NUMPIXELS - 1) {
+    if (i == NUMPIXELS) {
       i = 0;
       j++;
     }

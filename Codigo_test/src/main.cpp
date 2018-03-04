@@ -1,9 +1,36 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 #include <CircularBuffer.h>
+#include <stdlib.h>
+#include <string.h>
 
 
-#define NUMPIXELS 12//numero de pixeles led secuencial
+/******
+
+Definición de protocolo
+
+AA01016400FF
+AA = Inicio de paquete
+01 = Tipo
+01 = Canal
+01 = Funcion
+64 = Valor
+00 = Tiempo
+FF = Cierre de paquete
+
+Tipo
+1 = Dimmer corriente continua
+2 = Dimmer corriente alterna
+3 = Secuencia
+4 = DMX
+
+Valor
+0 -> 100
+
+*******/
+
+
+#define NUMPIXELS 300//numero de pixeles led secuencial
 
 //Pinout tipo 1
 #define PIN_PWM_1 10
@@ -12,7 +39,7 @@
 //Pinout tipo 2
 #define PIN_SEC_1 2
 
-CircularBuffer<char, 10> buffer;
+CircularBuffer<byte, 10> buffer;
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN_SEC_1, NEO_GRB + NEO_KHZ800);
 
@@ -23,13 +50,19 @@ unsigned long previousMillis = 0;
 unsigned int delay_millis = 1;
 uint8_t tipo = 0, canal = 0, valor = 0, tiempo = 0;
 uint8_t i = 0, j = 0;
-bool estado = false;
-bool run = false;
+uint8_t aa = 0x00;
 
 uint32_t Wheel(byte);
 
 void setup() {
   pixels.begin();
+  pixels.show();
+  Serial.begin(9600);
+
+  pinMode(PIN_SEC_1, OUTPUT);
+  pinMode(PIN_PWM_1, OUTPUT);
+  pinMode(PIN_PWM_2, OUTPUT);
+
   previousMillis = currentMillis;
 }
 
@@ -51,12 +84,23 @@ void loop() {
     previousMillis = currentMillis;
   }
 
-  if(run){
+  if(buffer.size() == 5){
+
+    pixels.setPixelColor(5, pixels.Color(0,0,255));
+    pixels.show();
+    analogWrite(PIN_PWM_1, 127);
+    //Serial.print("A80");
+    Serial.println(buffer.shift());
+    Serial.print(buffer.shift());
+    Serial.print(buffer.shift());
+    Serial.print(buffer.shift());
+    Serial.print(buffer.shift());
     //Serial.print("llego byte");
-  tipo = buffer.shift();
-  canal = buffer.shift();
-  valor = buffer.shift();
-  tiempo = buffer.shift();
+  //aa      = (int) buffer.shift();
+  //tipo    = (int) buffer.shift();
+  //canal   = (int) buffer.shift();
+  //valor   = (int) buffer.shift();
+  //tiempo  = (int) buffer.shift();
 
   switch (tipo) {
     case 1:
@@ -92,20 +136,10 @@ void loop() {
     }
     }
 
-  }
+  }buffer.clear();
+}//fin run
 
-  /*if (valor>aux_val) {
-    for(i=aux_val;i<=valor;i++){
-      analogWrite(9, i);
-    }
-  }
-  else{
-    for(i=aux_val;i>=valor;i--){
-    analogWrite(9, i);
-    }
-  }*/
-  //aux_val = valor;
-  }//fin run
+
 
 
   /*if (currentMillis - previousMillis > delay_millis && estado == true) {
@@ -125,26 +159,16 @@ void loop() {
     pixels.show();
   }*/
 
-  run = false;
-
+  //run = false;
+  //buffer.clear();
+  //aa = 0x00;
 }
 
-void serialEvent()
-{
-  while(Serial.available())
-  {
-    byte inChar = (byte)Serial.read();
-    //Serial.print(inChar);
-    if(inChar == 0xFF)
-    {
-    run = true;
-    //Serial.println("");
-    }
 
-    else
-    {
-      buffer.push(inChar);
-    }
+void serialEvent(){
+  while(Serial.available()>0)
+  {
+    buffer.push((byte) Serial.read());
   }
 }
 
