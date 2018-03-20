@@ -77,8 +77,8 @@ void incrementaEscribe(){
  * @author Andres Olivares
  */
 void escribeFunction(){
-    data[escribe] = (byte) Serial1.read();
-    Serial.write(data[escribe]);
+    data[escribe] = (byte) Serial.read();
+    //Serial.write(data[escribe]);
    incrementaEscribe();
 }
 
@@ -184,8 +184,8 @@ int distancia(){
       return (LARGO - lee) + escribe + 1;
     }
   }
-void serialEvent1(){
-  while(Serial1.available()>0)
+void serialEvent(){
+  while(Serial.available()>0)
   {
     escribeFunction();
   }
