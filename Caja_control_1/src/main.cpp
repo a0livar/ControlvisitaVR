@@ -1,5 +1,6 @@
 #include <Arduino.h>
-
+#include <stdlib.h>
+#include <string.h>
 /******
 
 Definición de protocolo
@@ -62,7 +63,6 @@ uint32_t dirFrameLs_hx = 0;
  */
  int distancia(void);
  void incrementaLee(void);
- int determinaTipo(byte *);
 
  /*
   *  Esta funcion incremente el valor y mantiene su circularidad
@@ -85,174 +85,86 @@ void escribeFunction(){
 void leeFunction(){
     if (distancia() != 0){
        switch (estado){
-        case 1:{
+        case 1:
             if (data[lee] == 0xAA){
               //Serial.println("Posible cabecera");
-              Serial.println("Posible peticion de servidor");
+              //Serial.println("Posible peticion de servidor");
               estado = 2;
               //data[lee] = '0';
             }
-            else if(data[lee] == 0x45){
-              //Error
-              char kackn[6] = {0x45, 0x52, 0x52, 0x4F, 0x52};//Error
-              char ackn[6] = "\0";
-              int i = 0;
-              int aux = lee;
-              do {
-                ackn[i] = data[aux];
-                i++;
-                aux++;
-              } while(i < 5);
-              if(strcmp(ackn,kackn) == 0){
-                Serial.println("Error de socket, reiniciando GSM");
-                //Levantar servicio
-                levantarServicio();
-                estado = 1;
-              }
-            }
+            else estado = 1;
+
             incrementaLee();
-          }break;
-        case 2:{
+        break;
 
-          int aux = lee;
-          tipo = data[aux];
-          //data[lee] = '0';
-          aux++;
-          largoData = data[aux] - 4;
-          // Serial.print("Largo data: ");
-          // Serial.println(largoData);
-          //data[lee] = '0';
-          aux++;
-          chk_sum = 0;
-          dirFrameLs_hx = 0;
-          for(int i = 0; i < 4; i++){
-            dirFrame[i] = data[aux];
-            chk_sum += data[aux];
-            //data[lee] = '0';
-            aux++;
+        case 2:
+
+          tipo = data[lee];
+          incrementaLee();
+
+          switch (tipo) {
+            case 1:   //Dimmer corriente continua
+              canal = data[lee];
+              incrementaLee();
+              valor = data[lee];
+              incrementaLee();
+
+              analogWrite(canal, (valor*255)/100);
+
+            break;
+
+            case 2: //Dimmer de corriente alterna
+              canal = data[lee];
+              incrementaLee();
+              valor = data[lee];
+              incrementaLee();
+
+              if (canal == 1) {
+                if (valor<100) {
+                  char buffer_valor[4] = " ";
+                  sprintf(buffer_valor, "A0%d",valor);
+                  Serial.print(buffer_valor);
+                }
+                else{
+                  char buffer_valor[4] = " ";
+                  sprintf(buffer_valor, "A%d",valor);
+                  Serial.print(buffer_valor);
+              }
+              }
+              if (canal == 2) {
+                if (valor<100) {
+                  char buffer_valor[4] = " ";
+                  sprintf(buffer_valor, "B0%d",valor);
+                  Serial.print(buffer_valor);
+                }
+                else{
+                  char buffer_valor[4] = " ";
+                  sprintf(buffer_valor, "B%d",valor);
+                  Serial.print(buffer_valor);
+              }
+              }
+            break;
+
+            case 3: // Control de DMX
+              /*****Pendiente de elaborar****/
+            break;
+
+            default:
+              estado = 1;
+            break;
           }
+          break;
 
-          dirFrameLs_hx = dirFrame[0];
-          dirFrameLs_hx = dirFrameLs_hx << 8;
-          dirFrameLs_hx += dirFrame[1];
-          dirFrameLs_hx = dirFrameLs_hx << 8;
-          dirFrameLs_hx += dirFrame[2];
-          dirFrameLs_hx = dirFrameLs_hx << 8;
-          dirFrameLs_hx += dirFrame[3];
-
-          // Serial.print("Direccion en hexa: ");
-          // Serial.println(dirFrameLs_hx,HEX);
-
-          for(int i = 0; i < largoData; i++){
-            dataFrame[i] = data[aux];
-            chk_sum += data[aux];
-            //data[lee] = '0';
-            aux++;
-          }
-          // Serial.print("Checksum: ");
-          // Serial.write(chk_sum);
-          // Serial.println("");
-          if(chk_sum == data[aux] && chk_sum != 0){
-            Serial.println("Checksum correcto");
-            Serial.println("");
-            Serial.println("Peticion valida entrante");
-            estado = 3;
-            lee = aux;
-          }
-          else{
-            Serial.println("Checksum incorrecto");
-            Serial.println("Paquete inválido");
+          default:
             estado = 1;
+          break;
           }
-          }break;
-        case 3:{
-
-          switch (tipo){
-           case 0x01:{
-             //Caso de respuesta disponible {0x02}
-             }break;
-           case 0x05:{
-             Serial.println("Redireccionando");
-             Serial.print("");
-            //  Serial.print("Direccion: ");
-            //  for(int i = 0;i < 4; i++){
-            //    Serial.write(dirFrame[i]);
-            //  }
-             //Serial.println(dirFrame_hx, HEX);
-            //  Serial.println("");
-            //  Serial.println("Data: ");
-            //  for(int i = 0;i < largoData; i++){
-            //    Serial.write(dataFrame[i]);
-            //  }
-            //  Serial.println("");
-
-             Serial.print("Enviando a Nodo: ");
-             Serial.print(dirFrameMs_hx,HEX);
-             Serial.print("-");
-             Serial.println(dirFrameLs_hx,HEX);
 
 
-             Serial.print("Largo: ");
-             Serial.println(largoData);
-
-             Serial.println("Data: ");
-             for(int i = 0; i < largoData;i++){
-               Serial.print("Byte[");
-               Serial.print(i);
-               Serial.print("]: ");
-               Serial.println(dataFrame[i],HEX);
-
-             }
-             Serial.println("");
-
-
-             XBeeAddress64 addr64 = XBeeAddress64(dirFrameMs_hx, dirFrameLs_hx);
-             ZBTxRequest zbTx = ZBTxRequest(addr64, dataFrame, largoData);
-             ZBTxStatusResponse txStatus = ZBTxStatusResponse();
-
-             xbee.send(zbTx);
-
-             if (xbee.readPacket(500)) {
-               // got a response!
-
-               // should be a znet tx status
-               if (xbee.getResponse().getApiId() == ZB_TX_STATUS_RESPONSE) {
-                 xbee.getResponse().getZBTxStatusResponse(txStatus);
-
-               // get the delivery status, the fifth byte
-               if (txStatus.getDeliveryStatus() == SUCCESS) {
-                 //success.  time to celebrate
-                 Serial.println("Enviado");
-               } else {
-                 //the remote XBee did not receive our packet. is it powered on?
-                 Serial.println("No hubo respuesta de destinatario");
-               }
-             }
-
-           } else if (xbee.getResponse().isError()) {
-             Serial.println("LLego paquete pero con Error");
-             //Serial.print("Error reading packet.  Error code: ");
-             //Serial.println(xbee.getResponse().getErrorCode());
-           } else {
-             Serial.println("TimeOut en comunicacion");
-             // local XBee did not provide a timely TX Status Response -- should not happen
-             //Serial.println("local xBee no proporciona un tiempo para la respuesta Tx status");
+           estado = 1;
            }
 
-           estado = 1;
-           //dataFrame[LARGO] = "\0";
-           memset(dataFrame, 0, sizeof(dataFrame));
-           memset(dirFrame, 0, sizeof(dirFrame));
-           dirFrameLs_hx = 0x00;
-           }break;
-         default:{
-           estado = 1;
-           }break;
-         }
-        }break;
-      }
-  }
-}
+    }
 
 void incrementaLee(){
     lee++;
@@ -296,7 +208,6 @@ void loop() {
   if (distancia() > 5){
       leeFunction();
   }
-  currentMillis = millis();
 
     // put your main code here, to run repeatedly:
 }
