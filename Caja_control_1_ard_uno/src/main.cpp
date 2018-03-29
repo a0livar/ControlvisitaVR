@@ -46,7 +46,7 @@ int escribe = 0;
 int lee = 0;
 int largoData = 0;
 const unsigned int LARGO = 0xFF;
-byte data[LARGO] = "\0";
+byte data[LARGO +1] = "\0";
 byte resp[8] = "\0";
 byte infoServidor[LARGO] = "\0";
 int indiceInfo = 0;
@@ -83,88 +83,141 @@ void escribeFunction(){
 }
 
 void leeFunction(){
-    if (distancia() != 0){
-       switch (estado){
-        case 1:
+
+
+        if(estado ==1){
             if (data[lee] == 0xAA){
-              //Serial.println("Posible cabecera");
-              //Serial.println("Posible peticion de servidor");
-              estado = 2;
-              //data[lee] = '0';
+                estado = 2;
+                chk_sum = data[lee];
+            }else{
+                estado = 1;
+                chk_sum = 0;
             }
-            else estado = 1;
-
             incrementaLee();
-        break;
-
-        case 2:
-
+        }
+        if (estado == 2){
           tipo = data[lee];
+          chk_sum = chk_sum + tipo;
           incrementaLee();
+          canal = data[lee];
+          chk_sum = chk_sum + canal;
+          incrementaLee();
+          valor = data[lee];
+          chk_sum = chk_sum + valor;
+          incrementaLee();
+          chk_sum = data[lee];
+          incrementaLee();
+          /*if (chk_sum != data[lee]){
+              estado = 1;
+              /*Serial.print("chk no=");
+              Serial.print(chk_sum);
+              Serial.println("");*/
+              /*
+              Serial.print("escribe");
+              Serial.println(escribe);
+              Serial.print("lee");
+              Serial.println(lee);
 
+              tipo = 10; //evita entrar al switch
+          }*/
+          /*Serial.print("chk ok=");
+          Serial.print(chk_sum);
+          Serial.println("");
+*/
           switch (tipo) {
-            case 1:   //Dimmer corriente continua
-              canal = data[lee];
-              incrementaLee();
-              valor = data[lee];
-              incrementaLee();
-
+            case 1: {  //Dimmer corriente continua
+              Serial.print("escribe");
+              Serial.println(escribe);
+              Serial.print("lee");
+              Serial.println(lee);
               analogWrite(canal, (valor*255)/100);
-
-            break;
-
-            case 2: //Dimmer de corriente alterna
-              canal = data[lee];
-              incrementaLee();
-              valor = data[lee];
-              incrementaLee();
+              estado = 1;
+            }break;
+            case 2:{ //Dimmer de corriente alterna
+                //Serial.write(valor);
 
               if (canal == 1) {
-                if (valor<100) {
+                if (valor==0) {
+                    char buffer_valor[4] = " ";
+                    sprintf(buffer_valor, "A000");
+                    Serial.print(buffer_valor);
+                  }
+                if (valor<100 && valor>=10) {
                   char buffer_valor[4] = " ";
                   sprintf(buffer_valor, "A0%d",valor);
                   Serial.print(buffer_valor);
                 }
-                else{
+                if (valor <10 && valor > 0) {
+                    char buffer_valor[4] = " ";
+                    sprintf(buffer_valor, "A00%d",valor);
+                    Serial.print(buffer_valor);
+                }
+                if (valor >= 100){
                   char buffer_valor[4] = " ";
-                  sprintf(buffer_valor, "A%d",valor);
-                  Serial.print(buffer_valor);
-              }
-              }
-              if (canal == 2) {
-                if (valor<100) {
-                  char buffer_valor[4] = " ";
-                  sprintf(buffer_valor, "B0%d",valor);
+                  sprintf(buffer_valor, "A100");
                   Serial.print(buffer_valor);
                 }
-                else{
-                  char buffer_valor[4] = " ";
-                  sprintf(buffer_valor, "B%d",valor);
-                  Serial.print(buffer_valor);
               }
+              if (canal == 2) {
+                  if (valor==0) {
+                      char buffer_valor[4] = " ";
+                      sprintf(buffer_valor, "B000");
+                      Serial.print(buffer_valor);
+                    }
+                  if (valor<100 && valor>=10) {
+                    char buffer_valor[4] = " ";
+                    sprintf(buffer_valor, "B0%d",valor);
+                    Serial.print(buffer_valor);
+                  }
+                  if (valor <10 && valor > 0) {
+                      char buffer_valor[4] = " ";
+                      sprintf(buffer_valor, "B00%d",valor);
+                      Serial.print(buffer_valor);
+                  }
+                  if (valor >= 100){
+                    char buffer_valor[4] = " ";
+                    sprintf(buffer_valor, "B100");
+                    Serial.print(buffer_valor);
+                  }
               }
-            break;
-
-            case 3: // Control de DMX
+              if (canal == 3) {
+                  if (valor==0) {
+                      char buffer_valor[4] = " ";
+                      sprintf(buffer_valor, "C000");
+                      Serial.print(buffer_valor);
+                    }
+                  if (valor<100 && valor>=10) {
+                    char buffer_valor[4] = " ";
+                    sprintf(buffer_valor, "C0%d",valor);
+                    Serial.print(buffer_valor);
+                  }
+                  if (valor <10 && valor > 0) {
+                      char buffer_valor[4] = " ";
+                      sprintf(buffer_valor, "C00%d",valor);
+                      Serial.print(buffer_valor);
+                  }
+                  if (valor >= 100){
+                    char buffer_valor[4] = " ";
+                    sprintf(buffer_valor, "C100");
+                    Serial.print(buffer_valor);
+                  }
+              }
+              estado = 1;
+            } break;
+            case 3: {// Control de DMX
               /*****Pendiente de elaborar****/
-            break;
+              estado = 1;
+            }break;
 
             default:
               estado = 1;
             break;
           }
-          break;
-
-          default:
-            estado = 1;
-          break;
-          }
+        }
 
 
-           estado = 1;
-           }
 
-    }
+}
 
 void incrementaLee(){
     lee++;
@@ -205,7 +258,8 @@ void setup() {
 void loop() {
 
 //1er Hilo
-  if (distancia() > 5){
+  if ((distancia() >= 5 && estado == 1)
+        || (distancia() >= 4 && estado == 2)){
       leeFunction();
   }
 
