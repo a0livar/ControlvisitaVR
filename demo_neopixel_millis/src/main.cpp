@@ -3,7 +3,7 @@
 
 #define PIN_SEC_1 10
 #define PIN_SEC_2 11
-#define NUMPIXELS 344
+#define NUMPIXELS 512
 //#define NUMPIXELS 20
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN_SEC_1, NEO_GRB + NEO_KHZ800);
@@ -13,7 +13,7 @@ Adafruit_NeoPixel pixels2 = Adafruit_NeoPixel(NUMPIXELS, PIN_SEC_2, NEO_GRB + NE
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
-unsigned int delay_millis = 100;
+unsigned int delay_millis = 50;
 uint8_t i = 0, j = 0;
 bool estado = false;
 uint8_t efect=11;
@@ -36,7 +36,7 @@ void setup() {
 
 void loop() {
   while (Serial.available()){
-     //Serial.print("llego");
+     Serial.print("llego");
      efect = Serial.read();
      Serial.print(efect);
      if (efect == 12){
@@ -66,7 +66,7 @@ void loop() {
         }break;
         case 12 : {
             //Serial.print("Dos");
-            // pixcel avanzando
+            //pixcel avanzando
             for (uint32_t i=0;i<NUMPIXELS;i++){
                 if (i >= pixcel  && i <= (pixcel+ancho)){
                     pixels.setPixelColor(i, nr, ng, nb);

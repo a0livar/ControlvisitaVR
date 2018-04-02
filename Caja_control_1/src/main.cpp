@@ -209,6 +209,7 @@ void leeFunction(){
               estado = 1;
             }break;
             case 4: {// Control direccionable
+                //Serial.write("Llego",valor);
                 Serial1.write(valor);
                 /*if (valor < 10){
                     Serial1.write(valor);
