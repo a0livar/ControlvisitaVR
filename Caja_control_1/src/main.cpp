@@ -85,7 +85,7 @@ void escribeFunction(){
 void leeFunction(){
     if (distancia() != 0){
        switch (estado){
-        case 1:
+        case 1:{
             if (data[lee] == 0xAA){
               //Serial.println("Posible cabecera");
               //Serial.println("Posible peticion de servidor");
@@ -95,15 +95,14 @@ void leeFunction(){
             else estado = 1;
 
             incrementaLee();
-        break;
+          }break;
 
-        case 2:
-
+        case 2:{
           tipo = data[lee];
           incrementaLee();
 
           switch (tipo) {
-            case 1:   //Dimmer corriente continua
+            case 1:{   //Dimmer corriente continua
               canal = data[lee];
               incrementaLee();
               valor = data[lee];
@@ -111,9 +110,9 @@ void leeFunction(){
 
               analogWrite(canal, (valor*255)/100);
 
-            break;
+            }break;
 
-            case 2: //Dimmer de corriente alterna
+            case 2:{ //Dimmer de corriente alterna
               canal = data[lee];
               incrementaLee();
               valor = data[lee];
@@ -143,15 +142,15 @@ void leeFunction(){
                   Serial.print(buffer_valor);
               }
               }
-            break;
+            }break;
 
-            case 3: // Control de DMX
+            case 3:{ // Control de DMX
               /*****Pendiente de elaborar****/
-            break;
+            }break;
 
-            default:
+            default:{
               estado = 1;
-            break;
+            }break;
           }
           break;
 
