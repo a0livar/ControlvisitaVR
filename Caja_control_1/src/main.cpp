@@ -48,6 +48,7 @@ int largoData = 0;
 const unsigned int LARGO = 0xFF;
 byte data[LARGO +1] = "\0";
 byte resp[8] = "\0";
+byte toSend[6] = "\0";
 byte infoServidor[LARGO] = "\0";
 int indiceInfo = 0;
 unsigned long tiempoPing = 0;
@@ -88,28 +89,33 @@ void leeFunction(){
         if(estado ==1){
             if (data[lee] == 0xAA){
                 estado = 2;
-                chk_sum = data[lee];
+                //toSend[0] = 0xAA;
             }else{
                 estado = 1;
-                chk_sum = 0;
             }
             incrementaLee();
         }
         if (estado == 2){
           tipo = data[lee];
-          chk_sum = chk_sum + tipo;
+         // toSend[1] = tipo;
           incrementaLee();
           canal = data[lee];
-          chk_sum = chk_sum + canal;
+          toSend[0] = canal; //R1
           incrementaLee();
           valor = data[lee];
-          chk_sum = chk_sum + valor;
+          toSend[1] = valor; //G1
           incrementaLee();
-          chk_sum = data[lee];
+          toSend[2] = data[lee]; //B1
+          incrementaLee();
+          toSend[3] = data[lee]; //R2
+          incrementaLee();
+          toSend[4] = data[lee]; //G2
+          incrementaLee();
+          toSend[5] = data[lee]; //B2
           incrementaLee();
           /*if (chk_sum != data[lee]){
               estado = 1;
-              /*Serial.print("chk no=");
+              Serial.print("chk no=");
               Serial.print(chk_sum);
               Serial.println("");*/
               /*
@@ -206,21 +212,14 @@ void leeFunction(){
             } break;
             case 3: {// Control de DMX
               /*****Pendiente de elaborar****/
+              Serial.write(toSend,6);
+              Serial1.write(toSend,6);
               estado = 1;
             }break;
             case 4: {// Control direccionable
-                //Serial.write("Llego",valor);
+                //Serial.write("Llego");
+                Serial.write(valor);
                 Serial1.write(valor);
-                /*if (valor < 10){
-                    Serial1.write(valor);
-                }
-                if (valor >= 10 && valor < 20){
-                    Serial2.write(valor);
-                }
-                if (valor >= 20 && valor < 30){
-                    Serial3.write(valor);
-                }
-*/
               estado = 1;
             }break;
 
@@ -276,8 +275,8 @@ void setup() {
 void loop() {
 
 //1er Hilo
-  if ((distancia() >= 5 && estado == 1)
-        || (distancia() >= 4 && estado == 2)){
+  if ((distancia() >= 8 && estado == 1)
+        || (distancia() >= 7 && estado == 2)){
       leeFunction();
   }
 

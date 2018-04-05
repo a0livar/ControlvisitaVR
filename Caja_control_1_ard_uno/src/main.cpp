@@ -258,8 +258,8 @@ void setup() {
 void loop() {
 
 //1er Hilo
-  if ((distancia() >= 5 && estado == 1)
-        || (distancia() >= 4 && estado == 2)){
+  if ((distancia() >= 8 && estado == 1)
+        || (distancia() >= 7 && estado == 2)){
       leeFunction();
   }
 
