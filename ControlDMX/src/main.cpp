@@ -47,6 +47,7 @@ int state = 0;
 void setup() {
   DMXSerial.init(DMXController);
 
+
   pinMode(RedPin,   OUTPUT); // sets the digital pin as output
   pinMode(GreenPin, OUTPUT);
   pinMode(BluePin,  OUTPUT);
@@ -75,11 +76,13 @@ void loop() {
     DMXSerial.write(2, GreenNow);
     analogWrite(GreenPin, GreenNow);
 
+
     if (BlueNow < BlueLevel)  BlueNow++;
     if (BlueNow > BlueLevel)  BlueNow--;
     DMXSerial.write(3, BlueNow);
     analogWrite(BluePin,  BlueNow);
+
   } // if
 
-  delayMicroseconds(2000); // wait a little bit
+  //delayMicroseconds(2000); // wait a little bit
 } // loop
