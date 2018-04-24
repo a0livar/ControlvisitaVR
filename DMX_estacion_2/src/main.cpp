@@ -11,7 +11,6 @@ void setup() {
     DMXSerial.init(DMXController);
     DMXSerial.write(1, 255); //Seteamos el control dimmer a su maximo nivel
     DMXSerial.write(9, 255); //Seteamos el control dimmer a su maximo nivel
-
     memset(cadenaRX, 0, sizeof(cadenaRX));
 }
 
@@ -30,6 +29,7 @@ void loop() {
       NEXT_char=0x00;
       Serial1.flush();
     }
+    Serial.flush();
   }
 
 
