@@ -52,7 +52,8 @@ void setup() {
    pixels.begin();
    pixels.show();
    previousMillis = currentMillis;
-   wdt_enable(WDTO_8S);
+   //wdt_disable();
+   wdt_enable(WDTO_1S);
    Serial.print("Init");
 }
 
@@ -82,6 +83,7 @@ void serialEvent(){
     }
 }
 void loop() {
+  wdt_reset();
     //Serial.print(Serial.available());
     /*if (Serial.available() >= 5){
         //data[escribe] = Serial.read();
