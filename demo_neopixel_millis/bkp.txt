@@ -1,0 +1,274 @@
+#include <Arduino.h>
+#include <Adafruit_NeoPixel.h>
+
+#define PIN_SEC_1 10
+#define NUMPIXELS 512
+
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN_SEC_1, NEO_GRB + NEO_KHZ800);
+
+unsigned long currentMillis = 0;
+unsigned long previousMillis = 0;
+
+unsigned int delay_millis = 50;
+uint8_t i = 0, j = 0;
+bool estado = false;
+
+uint8_t efect=14;
+uint8_t tmpEfect=14;
+
+uint8_t r = 0;
+uint8_t g = 0;
+uint8_t b = 0;
+
+uint16_t pixcel = 0;
+uint16_t ancho = 3;
+uint8_t nr=0;
+uint8_t ng=0xff;
+uint8_t nb=0xff;
+
+// seccion buffer
+const unsigned int LARGO = 0xFF;
+int escribe = 0;
+int estadoSerial = 1;
+int lee = 0;
+int largoData = 0;
+byte data[LARGO +1] = "\0";
+
+uint32_t Wheel(byte);
+
+int distancia(void);
+void incrementaLee(void);
+void incrementaEscribe(void);
+void allColor(byte,byte,byte);
+void leeFunction(void);
+
+void escribeFunction(){
+    data[escribe] = (byte) Serial.read();
+    //Serial.write(data[escribe]);
+   incrementaEscribe();
+}
+void incrementaEscribe(){
+    escribe++;
+    escribe &= LARGO;
+  }
+
+  void incrementaLee(){
+      lee++;
+      lee &= LARGO;
+  }
+
+  int distancia(){
+    if (lee == escribe){
+      return 0;
+      }
+    if (lee < escribe){
+      return escribe - lee;
+      }else{
+        return (LARGO - lee) + escribe + 1;
+      }
+    }
+    /*void serialEvent(){
+      while(Serial.available()>0)
+      {
+        escribeFunction();
+      }
+  }*/
+void setup() {
+   Serial.begin(9600);
+   pixels.begin();
+   pixels.show();
+   previousMillis = currentMillis;
+}
+
+void loop() {
+    /*Serial.print(distancia());
+    Serial.print("-");
+    Serial.print(estadoSerial);*/
+    while(Serial.available()>0)
+    {
+      escribeFunction();
+    }
+
+    if ((distancia() >= 5 && estadoSerial == 1)
+          || (distancia() >= 4 && estadoSerial == 2)){
+        leeFunction();
+    }
+
+  currentMillis = millis();
+  if ((currentMillis - previousMillis) > delay_millis){
+      currentMillis = millis();
+      previousMillis = currentMillis;
+    switch (efect){
+        case 10 :{
+            Serial.print("diez");
+            allColor(0x00,0x00,0x00);
+            pixels.show();
+        }break;
+        case 11 :{
+            Serial.print("once");
+            allColor(0xff,0xff,0xff);
+            pixels.show();
+
+        }break;
+        case 12 :{
+            Serial.print("doce");
+            allColor(241,98,26);
+            pixels.show();
+
+        }break;
+        case 13 :{
+            Serial.print("trece");
+            allColor(70,159,10 );
+            pixels.show();
+
+        }break;
+        case 14 :{
+            Serial.print("catorce");
+            allColor(217,200,35 );
+            pixels.show();
+
+        }break;
+        case 15 :{
+            //Serial.print("Uno");
+            allColor(180,0,234 );
+            pixels.show();
+
+        }break;
+        case 16 :{
+            //Serial.print("Uno");
+            allColor(34,150,181);
+            pixels.show();
+
+        }break;
+        case 17 :{
+            //Serial.print("Uno");
+            allColor(179,89,5);
+            pixels.show();
+        }break;
+
+        case 20 : {
+            //Serial.print("Dos");
+            //pixcel avanzando
+            for (uint32_t i=0;i<NUMPIXELS;i++){
+                if (i >= pixcel  && i <= (pixcel+ancho)){
+                    pixels.setPixelColor(i, nr, ng, nb);
+
+                }else{
+                    pixels.setPixelColor(i, 0, 0, 0);
+
+                }
+            }
+            pixcel ++;
+            if (pixcel > NUMPIXELS){
+                pixcel = 0;
+                delay_millis = delay_millis - 10;
+            }
+            if (delay_millis <= 10)
+            {
+                delay_millis = 100;
+            }
+            pixels.show();
+        }break;
+        case 0xff : {
+            allColor(r,g,b);
+            pixels.show();
+        }break;
+    }
+  }
+}
+
+void allColor(byte lr,byte lg,byte lb){
+  for (uint32_t i=0;i<NUMPIXELS;i++){
+      pixels.setPixelColor(i, r,g,b);
+  }
+  pixels.show();
+}
+
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+}
+
+
+void leeFunction(){
+        if(estadoSerial ==1){
+            if (data[lee] == 0xAA){
+                estadoSerial = 2;
+                Serial.print("Estado 2");
+                //toSend[0] = 0xAA;
+            }else{
+                Serial.print("Estado 1");
+                estadoSerial = 1;
+            }
+            incrementaLee();
+        }
+        if (estadoSerial == 2){
+            estadoSerial = 1;
+          tmpEfect = data[lee];
+         // toSend[1] = tipo;
+          incrementaLee();
+          r = data[lee];
+          incrementaLee();
+          g = data[lee];
+
+          incrementaLee();
+          b = data[lee];
+          incrementaLee();
+
+
+            if ((tmpEfect >= 10) && (tmpEfect <= 20)){
+                Serial.print("Unit ");
+                efect = tmpEfect;
+            }
+            if (tmpEfect == 0xff){
+                Serial.print("RGB ");
+                efect = tmpEfect;
+            }
+
+            if (efect == 20){
+               pixcel = 0;
+               ancho = 3;
+               nr = 0;
+               ng = 0xff;
+               nb = 0xff;
+           }
+        }
+}
+
+
+void rainbowCycle(uint8_t wait) {
+  uint16_t i, j;
+  unsigned long currentMillis = millis();
+  unsigned long previous = millis();
+  int dowork = 1;
+
+  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+    currentMillis = millis();
+    previous = millis();
+    dowork = 1;
+    //Serial.println("salio");
+    do{
+      if (dowork){
+          for(i=0; i< strip.numPixels(); i++) {
+            strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+            strip2.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+            strip3.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+          }
+          dowork = 0;
+        strip.show();
+        strip2.show();
+        strip3.show();
+       }
+      //delay(wait);
+      currentMillis = millis();
+    }while(currentMillis - previous < wait);
+  }
+}

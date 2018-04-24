@@ -17,8 +17,9 @@ FF = Cierre de paquete
 Tipo
 1 = Dimmer corriente continua
 2 = Dimmer corriente alterna
-3 = Secuencia
-4 = DMX
+3 = DMX
+4 = Secuencia
+5 = Secuencia RGB
 
 Valor
 0 -> 100
@@ -86,7 +87,7 @@ void escribeFunction(){
 void leeFunction(){
 
 
-        if(estado ==1){
+        if(estado == 1){
             if (data[lee] == 0xAA){
                 estado = 2;
                 //toSend[0] = 0xAA;
@@ -218,9 +219,26 @@ void leeFunction(){
             }break;
             case 4: {// Control direccionable
                 //Serial.write("Llego");
-                Serial.write(valor);
-                Serial1.write(valor);
+                byte toSend2[3] = "\0";
+                toSend2[0] = 0xAA; //Inicio Paquete
+                toSend2[1] = valor; //Secuencia
+                toSend2[2] = toSend[0]; //Canal
+                Serial.write(toSend2, 3);
+                Serial1.write(toSend2, 3);
               estado = 1;
+            }break;
+            case 5: {// Control direccionable RGB
+                Serial.write("Llego D-RGB");
+                byte toSend2[6] = "\0";
+                /*toSend2[0] = 0xAA; //Inicio Paquete
+                toSend2[1] = 0xFF; // FF es direccionable RGB
+                toSend2[2] = toSend[0]; //Canal*/
+                toSend2[0] = toSend[1]; //R
+                toSend2[1] = toSend[2]; //G
+                toSend2[2] = toSend[3]; //B
+
+                Serial.write(toSend2, 3);
+                Serial1.write(toSend2, 3);
             }break;
 
             default:
@@ -252,6 +270,7 @@ int distancia(){
     }
   }
 void serialEvent(){
+  //Serial.print("EVENTO");
   while(Serial.available()>0)
   {
     escribeFunction();
@@ -274,9 +293,11 @@ void setup() {
 
 void loop() {
 
+  Serial.write(Serial.available());
+
 //1er Hilo
-  if ((distancia() >= 8 && estado == 1)
-        || (distancia() >= 7 && estado == 2)){
+  if ((distancia() >= 9 && estado == 1)
+        || (distancia() >= 8 && estado == 2)){
       leeFunction();
   }
 
