@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
-#include <avr/wdt.h>
 
 #define PIN_SEC_1 10
 #define NUMPIXELS 512
@@ -52,8 +51,6 @@ void setup() {
    pixels.begin();
    pixels.show();
    previousMillis = currentMillis;
-   wdt_enable(WDTO_8S);
-   Serial.print("Init");
 }
 
 void serialEvent(){
@@ -76,9 +73,6 @@ void serialEvent(){
         }else{
             tmpEfect = 255;
         }
-    }
-    if (Serial.available() > 3){
-        Serial.flush();
     }
 }
 void loop() {
@@ -116,15 +110,12 @@ void loop() {
     if (tmpEfect == 255){
         efect = 255;
     }
-    if (tmpEfect == 21){
-        efect = 21;
-    }
 
     // Serial.print("llego");
      //tmpEfect = Serial.read();
-    /* if ((tmpEfect >= 10) && (tmpEfect <= 22)){
+     if ((tmpEfect >= 10) && (tmpEfect <= 22)){
          efect = tmpEfect;
-     }*/
+     }
 
      // Estación 4-> 10 - 20
      //Serial.print(efect);
@@ -133,13 +124,6 @@ void loop() {
 
   currentMillis = millis();
   if ((currentMillis - previousMillis) > delay_millis){
-      wdt_reset();
-      Serial.print(r);
-      Serial.print(g);
-      Serial.println(b);
-      /*while(1){
-          Serial.print("Q");
-      }*/
       currentMillis = millis();
       previousMillis = currentMillis;
       j2 = j2 +1;
@@ -265,12 +249,11 @@ void loop() {
                 currentMillis2 = millis();
             }while(currentMillis2 - previous2 < 20);
             }
-        }break;
+        }
         case 255:{
-            Serial.print("RGB");
             allColor(r,g,b);
             pixels.show();
-        }break;
+        }
     }
   }
 
