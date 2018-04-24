@@ -30,7 +30,7 @@ void loop() {
       NEXT_char=0x00;
       Serial1.flush();
     }
-}6+
+  }
 
 
 void serialEvent1() {
@@ -43,7 +43,7 @@ void serialEvent1() {
     if(NEXT_char==6){
       //NEXT_char=0x00;
       comandoCompleto = true;
-      //Serial1.flush();
+      Serial1.flush();
    }
   }
 }
