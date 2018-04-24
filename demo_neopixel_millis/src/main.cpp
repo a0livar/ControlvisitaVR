@@ -41,11 +41,6 @@ byte data[LARGO +1] = "\0";
 
 uint32_t Wheel(byte);
 void allColor(byte,byte,byte);
-int distancia(void);
-void incrementaLee(void);
-void incrementaEscribe(void);
-//void leeFunction(void);
-void escribeFunction(void);
 
 void setup() {
    Serial.begin(9600);
@@ -83,38 +78,7 @@ void serialEvent(){
     }
 }
 void loop() {
-  wdt_reset();
-    //Serial.print(Serial.available());
-    /*if (Serial.available() >= 5){
-        //data[escribe] = Serial.read();
-        head = Serial.read();
-        tmpEfect = Serial.read();
-        if (head != 0xAA){
-            Serial.print("Sin cabecera");
-            Serial.flush();
-            tmpEfect = efect;
-        }else{
-            Serial.print("cabecera");
-            efect = tmpEfect;
-            r = Serial.read();
-            g = Serial.read();
-            b = Serial.read();
-        }
-
-        //Serial.flush();
-        //Serial.print(tmpEfect);
-        Serial.print(r);
-        Serial.print(g);
-        Serial.print(b);
-        Serial.print("[");
-        Serial.print(efect);
-        Serial.print("]");
-
-        //incrementaEscribe();
-        //escribeFunction();
-    }*/
-
-
+    wdt_reset();
     if (tmpEfect == 255){
         efect = 255;
     }
@@ -122,20 +86,9 @@ void loop() {
         efect = 21;
     }
 
-    // Serial.print("llego");
-     //tmpEfect = Serial.read();
-    /* if ((tmpEfect >= 10) && (tmpEfect <= 22)){
-         efect = tmpEfect;
-     }*/
-
-     // Estación 4-> 10 - 20
-     //Serial.print(efect);
-
-
-
   currentMillis = millis();
   if ((currentMillis - previousMillis) > delay_millis){
-      wdt_reset();
+
       Serial.print(r);
       Serial.print(g);
       Serial.println(b);
@@ -149,80 +102,6 @@ void loop() {
           j2 = 0;
       }
     switch (efect){
-        case 10 :{
-            Serial.print("Zero");
-            allColor(0x00,0x00,0x00);
-            pixels.show();
-
-        }break;
-        case 11 :{
-            //Serial.print("Uno");
-            allColor(0xff,0xff,0xff);
-            pixels.show();
-
-        }break;
-        case 12 :{
-            //Serial.print("Uno");
-            allColor(241,98,26);
-            pixels.show();
-
-        }break;
-        case 13 :{
-            //Serial.print("Uno");
-            allColor(70,159,10 );
-            pixels.show();
-
-        }break;
-        case 14 :{
-            //Serial.print("Uno");
-            allColor(217,200,35 );
-            pixels.show();
-
-        }break;
-        case 15 :{
-            //Serial.print("Uno");
-            allColor(180,0,234 );
-            pixels.show();
-
-        }break;
-        case 16 :{
-            //Serial.print("Uno");
-            allColor(34,150,181);
-            pixels.show();
-
-        }break;
-        case 17 :{
-            //Serial.print("Uno");
-            allColor(179,89,5);
-            pixels.show();
-        }break;
-
-        case 20 : {
-            Serial.print("EF");
-            Serial.print(pixcel);
-            Serial.print("-");
-            Serial.print(pixcel+ancho);
-            //pixcel avanzando
-            for (uint32_t i=0;i<NUMPIXELS;i++){
-                if (i >= pixcel  && i <= (pixcel+ancho)){
-                    pixels.setPixelColor(i, nr, ng, nb);
-
-                }else{
-                    pixels.setPixelColor(i, 0, 0, 0);
-                }
-            }
-            pixcel = pixcel +1;
-            pixels.show();
-            if (pixcel > NUMPIXELS){
-                pixcel = 0;
-                delay_millis = delay_millis - 10;
-            }
-            if (delay_millis <= 10)
-            {
-                delay_millis = 100;
-            }
-            //pixels.show();
-        }break;
         case 21:{
             uint16_t i2;
             unsigned long currentMillis2 = millis();
@@ -242,31 +121,6 @@ void loop() {
                   //delay(wait);
                   currentMillis2 = millis();
               }while(currentMillis2 - previous2 < 20);
-        }break;
-        case 22:{
-            uint16_t i, j;
-            unsigned long currentMillis2 = millis();
-            unsigned long previous2 = millis();
-            int dowork = 1;
-
-            for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-              currentMillis2 = millis();
-              previous2 = millis();
-              dowork = 1;
-              //Serial.println("salio");
-              do{
-                if (dowork){
-                    for(i=0; i< pixels.numPixels(); i++) {
-                      pixels.setPixelColor(i, Wheel(((i * 256 / pixels.numPixels()) + j) & 255));
-                    }
-                    dowork = 0;
-                  pixels.show();
-
-                 }
-                //delay(wait);
-                currentMillis2 = millis();
-            }while(currentMillis2 - previous2 < 20);
-            }
         }break;
         case 255:{
             Serial.print("RGB");
@@ -309,62 +163,3 @@ int distancia(){
       return ((LARGO - lee) + escribe + 1);
     }
 }
-void incrementaLee(){
-    lee++;
-    lee &= LARGO;
-}
-void incrementaEscribe(){
-    escribe++;
-    escribe &= LARGO;
-  }
-  void escribeFunction(){
-      data[escribe] = (byte) Serial.read();
-      //Serial.write(data[escribe]);
-     incrementaEscribe();
-  }
-
-
-  /*void leeFunction(){
-          if(estadoSerial ==1){
-              if (data[lee] == 0xAA){
-                  estadoSerial = 2;
-                  Serial.print("Estado 2");
-                  //toSend[0] = 0xAA;
-              }else{
-                  Serial.print("Estado 1");
-                  estadoSerial = 1;
-              }
-              incrementaLee();
-          }
-          if (estadoSerial == 2){
-              estadoSerial = 1;
-            tmpEfect = data[lee];
-           // toSend[1] = tipo;
-            incrementaLee();
-            r = data[lee];
-            incrementaLee();
-            g = data[lee];
-
-            incrementaLee();
-            b = data[lee];
-            incrementaLee();
-
-
-              if ((tmpEfect >= 10) && (tmpEfect <= 20)){
-                  Serial.print("Unit ");
-                  efect = tmpEfect;
-              }
-              if (tmpEfect == 0xff){
-                  Serial.print("RGB ");
-                  efect = tmpEfect;
-              }
-
-              if (efect == 20){
-                 pixcel = 0;
-                 ancho = 3;
-                 nr = 0;
-                 ng = 0xff;
-                 nb = 0xff;
-             }
-          }
-  }*/
